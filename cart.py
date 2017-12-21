@@ -1,17 +1,22 @@
 from flask import Flask, request, Response, jsonify
+from pymongo import MongoClient
+from middleware import setup_metrics
 import json
 import requests
 import os
 import logging
 import random
-from pymongo import MongoClient
 import jwt
+import prometheus_client
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret'
+setup_metrics(app)
+
+CONTENT_TYPE_LATEST = str('text/plain; version=0.0.4; charset=utf-8')
 
 client = MongoClient('cartdb', 27017)
 db = client.cartDb
@@ -137,5 +142,9 @@ def changestate():
       logger.info("Failed to update cart state. Leaving Cart.")
       response = Response(status=500)
    return response
+
+@app.route('/metrics')
+def metrics():
+    return Response(prometheus_client.generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 app.run(port=5003, debug=True, host='0.0.0.0')
