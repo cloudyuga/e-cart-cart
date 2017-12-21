@@ -2,3 +2,4 @@ flask
 requests
 pymongo
 pyjwt
+prometheus_client
